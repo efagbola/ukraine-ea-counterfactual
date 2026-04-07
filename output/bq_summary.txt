@@ -1,0 +1,19 @@
+Counterfactual findings
+============================================================
+Model sample: 2005-02-01 to 2024-08-01
+Observations: 211
+
+Ukraine lag order (aic): 5
+EA lag order (aic):      11
+
+Endogenous — Ukraine : ['UKR_IP_YOY', 'UKR_CPI_YOY']
+Endogenous — EA      : ['EA_IP_YOY', 'EA_HICP_YOY']
+Exogenous controls   : ['dlog_oil', 'dlog_wheat']
+
+BQ identification:
+  Shock 1 = supply
+  Shock 2 = demand
+
+Counterfactual: keep Ukraine supply shocks,
+  replace Ukraine demand shocks with Euro Area demand shocks.
+  Full VAR re-simulation from initial conditions.
