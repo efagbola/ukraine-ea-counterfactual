@@ -1,6 +1,6 @@
 # Ukraine Euro-Area Counterfactual
 
-This repository contains my final exam submission for Quantitative Methods in Finance (QMF). The project estimates a structural VAR counterfactual for Ukraine’s inflation under hypothetical Euro Area membership, using a Blanchard–Quah identification strategy and regime-dependent treatment intensity motivated by Part A.
+This repository contains my final exam submission for Quantitative Methods in Finance. The project estimates a structural VAR counterfactual for Ukraine’s inflation under hypothetical Euro Area membership, using a Blanchard–Quah identification strategy and regime-dependent treatment intensity motivated by Part A.
 
 
 ## Repository structure
