@@ -4,7 +4,7 @@ This repository contains my final exam submission for Quantitative Methods in Fi
 
 
 ## Repository structure
-- `Counterfactual_report.pdf` — includes the answer to Part A, as well as the Part B counterfactual figure and interpretation
+- `counterfactual_report.pdf` — includes the answer to Part A, as well as the Part B counterfactual figure and interpretation
 - `counterfactual.ipynb` — main reproducible notebook  
 - `src/model_utils.py` — econometric helper functions  
 - `data/` — raw input datasets used by the notebook  
