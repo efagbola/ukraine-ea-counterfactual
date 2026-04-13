@@ -44,64 +44,52 @@ def get_structural_shocks(resid, B):
         columns=["shock_supply", "shock_demand"],
     )
 
-
 def euro_benefit_weight(dates):
     """
-    Regime-dependent treatment intensity for Euro Area membership counterfactual.
+    Regime-dependent treatment intensity for the Euro Area counterfactual.
 
-    This weight controls how much of Ukraine's structural demand shock is replaced
-    by the Euro Area demand shock each period. It is calibrated to Ukraine's monetary
-    regime chronology established in Part A.
+    The weight should reflect BOTH:
+    1. constrained sovereignty / fear of floating:
+       when Ukraine is effectively pegged, Euro membership changes less;
+    2. credibility import:
+       before 2016, EA membership should generally matter more than after
+       inflation targeting is adopted.
 
-    Economic logic by period:
-
-    - Peg periods (pre-2008, 2009-2014): weight = 0.05
-      Ukraine already had very limited monetary autonomy under the de facto dollar
-      peg. The NBU subordinated interest rate policy to exchange-rate stability, so
-      Euro Area membership would not have represented a large additional change in
-      demand conditions. The shock-substitution treatment effect is therefore near zero.
-
-    - 2014-2016 crisis and IT transition: weight = 0.70 / 0.50
-      This is the period of largest treatment effect. The hryvnia collapsed by ~90%,
-      generating acute devaluation-driven inflation that would have been impossible
-      under the euro. EA membership would have eliminated this channel entirely and
-      imported the ECB's nominal anchor during the weakest period of NBU credibility.
-      The high weight reflects the maximum divergence between Ukrainian and EA demand
-      conditions and the largest potential inflation-reduction benefit.
-
-    - Post-2016 inflation targeting: weight = 0.20
-      The NBU formally adopted inflation targeting in December 2016. Credibility
-      improved and the exchange rate floated freely. EA membership would still have
-      aligned Ukraine's demand conditions more closely with the ECB, but the marginal
-      benefit is smaller than during 2014-2016 because the NBU had partially converged
-      toward a modern monetary framework. The lower weight produces a smaller
-      counterfactual gap post-2016, consistent with the Giavazzi-Pagano (1988) sanity
-      check that credibility gains from EA membership diminish as domestic credibility
-      improves.
-
-    - Wartime and post-wartime (post Feb 2022): weight = 0.10
-      The NBU reimposed a fixed exchange rate in February 2022 as an emergency
-      stabilisation measure. Inflation dynamics were dominated by war conditions,
-      supply disruptions, and administrative controls rather than normal monetary
-      transmission. Substituting ECB demand shocks strongly in this period would
-      misrepresent the counterfactual, so the weight is kept low.
+    So the desired pattern is:
+    - small during hard-peg periods,
+    - large during 2014-15 collapse,
+    - still meaningfully positive pre-2016 because credibility was weak,
+    - smaller after 2016 once NBU credibility improves.
     """
     d = pd.DatetimeIndex(dates)
     w = pd.Series(index=d, dtype=float)
 
-    # Peg and near-peg periods: minimal treatment effect
-    w[d < "2008-04-01"]                                          = 0.05
-    w[(d >= "2008-04-01") & (d < "2014-02-01")]                  = 0.05
+    # 2002-2004: de facto peg, but very weak credibility.
+    # Keep treatment effect present but not huge.
+    w[d < "2005-01-01"] = 0.30
 
-    # Crisis and IT transition: largest treatment effect
-    w[(d >= "2014-02-01") & (d < "2015-03-01")]                  = 0.70
-    w[(d >= "2015-03-01") & (d < "2016-09-01")]                  = 0.50
+    # 2005-2008: still pre-credibility-reform era.
+    # Slightly larger benefit from imported credibility.
+    w[(d >= "2005-01-01") & (d < "2008-09-01")] = 0.40
 
-    # Post-2016 IT: smaller but positive treatment effect
-    w[(d >= "2016-09-01") & (d < "2022-02-24")]                  = 0.20
+    # GFC + re-peg period: autonomy again very limited.
+    # Treatment should fall, not rise.
+    w[(d >= "2008-09-01") & (d < "2014-02-01")] = 0.12
 
-    # Wartime and post-wartime: small treatment effect
-    w[d >= "2022-02-24"]                                         = 0.10
+    # 2014 devaluation crisis: maximum euro benefit.
+    w[(d >= "2014-02-01") & (d < "2015-03-01")] = 0.65
+
+    # 2015-2016 transition to inflation targeting:
+    # still high, but lower than the peak crisis phase.
+    w[(d >= "2015-03-01") & (d < "2016-09-01")] = 0.40
+
+    # Post-2016 inflation targeting:
+    # counterfactual should be closer to actual than in pre-2016 period.
+    w[(d >= "2016-09-01") & (d < "2022-02-24")] = 0.15
+
+    # Wartime fixed-rate regime:
+    # euro treatment effect small; inflation mostly war/supply/admin driven.
+    w[d >= "2022-02-24"] = 0.08
 
     return w.values
 
@@ -121,6 +109,11 @@ def simulate_counterfactual(ukr_res, B_ukr, ea_shocks, ukr_endog):
       4. Convert counterfactual structural shocks back to reduced-form residuals.
       5. Re-simulate Ukraine's VAR recursively so the shock substitution propagates
          correctly through the full lag structure.
+
+    Unlike a simple cross-sectional mean of Euro Area inflation, this approach feeds
+    EA structural demand shocks through Ukraine's own estimated VAR dynamics,
+    preserving Ukraine-specific transmission mechanisms while only replacing the
+    source of demand impulses.
     """
     p      = ukr_res.k_ar
     k      = ukr_res.neqs
